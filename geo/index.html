@@ -267,10 +267,11 @@
                     data-id="${layer.id}" title="Toggle visibility">
               ${layer.visible ? '👁' : '🙈'}
             </button>
-            <span class="layer-name">${layer.name}</span>
+            <span class="layer-name"></span>
             <input type="color" value="${layer.color}" data-id="${layer.id}" title="Change color">
             <button class="delete-btn" data-id="${layer.id}" title="Remove layer">&times;</button>
           `;
+          item.querySelector('.layer-name').textContent = layer.name;
           container.appendChild(item);
         }
 
