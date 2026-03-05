@@ -288,6 +288,80 @@
 
       // Initialize layer list (shows empty state)
       renderLayerList();
+
+      let geojsonCount = 0;
+      let h3Count = 0;
+
+      function formatProperties(props) {
+        if (!props || Object.keys(props).length === 0) return 'No properties';
+        return Object.entries(props)
+          .map(([k, v]) => `<b>${k}:</b> ${v}`)
+          .join('<br>');
+      }
+
+      function addGeoJSONLayer(text) {
+        let geojson;
+        try {
+          geojson = JSON.parse(text);
+        } catch (e) {
+          throw new Error('Invalid JSON: ' + e.message);
+        }
+        if (!geojson.type) {
+          throw new Error('Not valid GeoJSON: missing "type" field');
+        }
+
+        const color = nextColor();
+        geojsonCount++;
+        const name = 'GeoJSON ' + geojsonCount;
+
+        const leafletLayer = L.geoJSON(geojson, {
+          style: { color, fillColor: color, fillOpacity: 0.3, weight: 2 },
+          pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
+            radius: 6, color, fillColor: color, fillOpacity: 0.5, weight: 2
+          }),
+          onEachFeature: (feature, layer) => {
+            layer.bindTooltip(formatProperties(feature.properties), { sticky: true });
+          }
+        });
+
+        const added = addLayerToState(name, 'geojson', color, leafletLayer, geojson);
+        try {
+          map.fitBounds(leafletLayer.getBounds());
+        } catch (e) {
+          // getBounds may fail if layer has no features — ignore
+        }
+        return added;
+      }
+
+      document.getElementById('add-layer-btn').addEventListener('click', () => {
+        const type = document.getElementById('layer-type').value;
+        const data = document.getElementById('layer-data').value.trim();
+        const errorEl = document.getElementById('error-msg');
+        errorEl.textContent = '';
+
+        if (!data) {
+          errorEl.textContent = 'Please paste some data.';
+          return;
+        }
+
+        try {
+          if (type === 'geojson') {
+            addGeoJSONLayer(data);
+          } else if (type === 'h3') {
+            addH3Layer(data);
+          }
+          document.getElementById('layer-data').value = '';
+        } catch (e) {
+          errorEl.textContent = e.message;
+        }
+      });
+
+      document.getElementById('layer-type').addEventListener('change', (e) => {
+        const textarea = document.getElementById('layer-data');
+        textarea.placeholder = e.target.value === 'geojson'
+          ? 'Paste GeoJSON here...'
+          : 'Paste H3 cell IDs (one per line or comma-separated)...';
+      });
     });
   </script>
 </body>
