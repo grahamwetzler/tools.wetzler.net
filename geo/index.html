@@ -351,7 +351,7 @@
 
         for (const id of ids) {
           if (!h3.isValidCell(id)) {
-            throw new Error(`Invalid H3 cell ID: "${escapeHtml(id)}"`);
+            throw new Error(`Invalid H3 cell ID: "${id}"`);
           }
         }
 
