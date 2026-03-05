@@ -292,10 +292,19 @@
       let geojsonCount = 0;
       let h3Count = 0;
 
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
       function formatProperties(props) {
         if (!props || Object.keys(props).length === 0) return 'No properties';
         return Object.entries(props)
-          .map(([k, v]) => `<b>${k}:</b> ${v}`)
+          .map(([k, v]) => `<b>${escapeHtml(k)}:</b> ${escapeHtml(v)}`)
           .join('<br>');
       }
 
@@ -331,6 +340,10 @@
           // getBounds may fail if layer has no features — ignore
         }
         return added;
+      }
+
+      function addH3Layer(text) {
+        throw new Error('H3 support not yet loaded. Please refresh the page.');
       }
 
       document.getElementById('add-layer-btn').addEventListener('click', () => {
