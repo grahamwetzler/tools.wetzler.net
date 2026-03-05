@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>tools.wetzler.net</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #e0e0e0;
+      --muted: #666;
+      --accent: #7c9fff;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 48px 24px;
+    }
+
+    header {
+      max-width: 640px;
+      margin: 0 auto 48px;
+      width: 100%;
+    }
+
+    header h1 {
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    header h1 span {
+      color: var(--text);
+    }
+
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
+    }
+
+    .tool-list {
+      list-style: none;
+      border-top: 1px solid var(--border);
+    }
+
+    .tool-list li {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tool-list a {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      padding: 16px 0;
+      text-decoration: none;
+      color: var(--text);
+      transition: color 0.15s;
+    }
+
+    .tool-list a:hover {
+      color: var(--accent);
+    }
+
+    .tool-list a:hover .tool-path {
+      color: var(--accent);
+    }
+
+    .tool-path {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      transition: color 0.15s;
+    }
+
+    .tool-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      font-weight: 300;
+      color: var(--muted);
+    }
+
+    .subtitle a {
+      color: var(--muted);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .subtitle a:hover {
+      color: var(--accent);
+    }
+
+    footer {
+      max-width: 640px;
+      margin: 48px auto 0;
+      width: 100%;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>// <span>tools.wetzler.net</span></h1>
+    <p class="subtitle">a collection of useful tools, inspired by <a href="https://tools.simonwillison.net/">tools.simonwillison.net</a></p>
+  </header>
+
+  <main>
+    <ul class="tool-list">
+      <li>
+        <a href="/geo/">
+          <span class="tool-path">/geo</span>
+          <span class="tool-desc">visualize GeoJSON, H3 cells, and geographic data on a map</span>
+        </a>
+      </li>
+    </ul>
+  </main>
+
+</body>
+</html>
