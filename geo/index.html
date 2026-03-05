@@ -6,6 +6,7 @@
   <title>Geo Viewer</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <script src="https://unpkg.com/h3-js@4" defer></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
@@ -343,7 +344,44 @@
       }
 
       function addH3Layer(text) {
-        throw new Error('H3 support not yet loaded. Please refresh the page.');
+        const ids = text.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+        if (ids.length === 0) {
+          throw new Error('No H3 cell IDs found.');
+        }
+
+        for (const id of ids) {
+          if (!h3.isValidCell(id)) {
+            throw new Error(`Invalid H3 cell ID: "${escapeHtml(id)}"`);
+          }
+        }
+
+        const color = nextColor();
+        h3Count++;
+        const name = 'H3 ' + h3Count;
+
+        const polygons = [];
+        for (const id of ids) {
+          const boundary = h3.cellToBoundary(id);
+          const latLngs = boundary.map(([lat, lng]) => [lat, lng]);
+          const polygon = L.polygon(latLngs, {
+            color, fillColor: color, fillOpacity: 0.3, weight: 2
+          });
+          const res = h3.getResolution(id);
+          polygon.bindTooltip(
+            `<b>Cell:</b> ${escapeHtml(id)}<br><b>Resolution:</b> ${res}`,
+            { sticky: true }
+          );
+          polygons.push(polygon);
+        }
+
+        const layerGroup = L.featureGroup(polygons);
+        const added = addLayerToState(name, 'h3', color, layerGroup, ids);
+        try {
+          map.fitBounds(layerGroup.getBounds());
+        } catch (e) {
+          // empty group — ignore
+        }
+        return added;
       }
 
       document.getElementById('add-layer-btn').addEventListener('click', () => {
