@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geo Viewer</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
+
+    .container { display: flex; height: 100vh; }
+
+    .sidebar {
+      width: 300px;
+      min-width: 300px;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .sidebar h1 {
+      font-size: 1.1rem;
+      padding: 16px;
+      border-bottom: 1px solid #2a2a4a;
+      color: #fff;
+    }
+
+    .add-layer-section {
+      padding: 16px;
+      border-bottom: 1px solid #2a2a4a;
+    }
+
+    .add-layer-section label {
+      display: block;
+      font-size: 0.85rem;
+      margin-bottom: 6px;
+      color: #aaa;
+    }
+
+    .add-layer-section select,
+    .add-layer-section textarea,
+    .add-layer-section button {
+      width: 100%;
+      font-family: inherit;
+    }
+
+    .add-layer-section select {
+      padding: 8px;
+      background: #2a2a4a;
+      color: #e0e0e0;
+      border: 1px solid #3a3a5a;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+
+    .add-layer-section textarea {
+      padding: 8px;
+      background: #2a2a4a;
+      color: #e0e0e0;
+      border: 1px solid #3a3a5a;
+      border-radius: 4px;
+      resize: vertical;
+      min-height: 120px;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+    }
+
+    .add-layer-section button {
+      padding: 10px;
+      background: #4363d8;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .add-layer-section button:hover { background: #3453c8; }
+
+    .layers-section {
+      padding: 16px;
+      flex: 1;
+    }
+
+    .layers-section h2 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #888;
+      margin-bottom: 12px;
+    }
+
+    .layer-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+
+    .layer-item:hover { background: #2a2a4a; }
+
+    .layer-item .visibility-btn {
+      background: none;
+      border: none;
+      color: #e0e0e0;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 2px 4px;
+    }
+
+    .layer-item .visibility-btn.hidden { opacity: 0.3; }
+
+    .layer-item .layer-name {
+      flex: 1;
+      font-size: 0.9rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .layer-item input[type="color"] {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: none;
+      padding: 0;
+    }
+
+    .layer-item .delete-btn {
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 2px 6px;
+    }
+
+    .layer-item .delete-btn:hover { color: #e6194b; }
+
+    #map { flex: 1; }
+
+    .error-msg {
+      color: #e6194b;
+      font-size: 0.8rem;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <h1>Geo Viewer</h1>
+      <div class="add-layer-section">
+        <label for="layer-type">Layer type</label>
+        <select id="layer-type">
+          <option value="geojson">GeoJSON</option>
+          <option value="h3">H3 Cells</option>
+        </select>
+        <label for="layer-data">Data</label>
+        <textarea id="layer-data" placeholder="Paste GeoJSON here..."></textarea>
+        <button id="add-layer-btn">Add to Map</button>
+        <div id="error-msg" class="error-msg"></div>
+      </div>
+      <div class="layers-section">
+        <h2>Layers</h2>
+        <div id="layers-list"></div>
+      </div>
+    </div>
+    <div id="map"></div>
+  </div>
+  <script>
+    const map = L.map('map').setView([40, -95], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(map);
+  </script>
+</body>
+</html>
