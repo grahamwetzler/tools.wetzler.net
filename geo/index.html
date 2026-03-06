@@ -156,6 +156,24 @@
       font-size: 0.8rem;
       margin-top: 8px;
     }
+
+    .clear-btn {
+      width: 100%;
+      padding: 8px;
+      background: none;
+      color: #888;
+      border: 1px solid #3a3a5a;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+      margin-top: 12px;
+    }
+
+    .clear-btn:hover {
+      color: #e6194b;
+      border-color: #e6194b;
+    }
   </style>
 </head>
 <body>
@@ -176,6 +194,7 @@
       <div class="layers-section">
         <h2>Layers</h2>
         <div id="layers-list"></div>
+        <button id="clear-btn" class="clear-btn">Clear all layers</button>
       </div>
     </div>
     <div id="map"></div>
@@ -207,6 +226,19 @@
         } catch (e) {
           // storage unavailable or quota exceeded — ignore
         }
+      }
+
+      function clearAllLayers() {
+        for (const layer of layers) {
+          map.removeLayer(layer.leafletLayer);
+        }
+        layers.length = 0;
+        colorIndex = 0;
+        geojsonCount = 0;
+        h3Count = 0;
+        layerIdCounter = 0;
+        localStorage.removeItem(STORAGE_KEY);
+        renderLayerList();
       }
 
       function restoreLayers() {
@@ -473,6 +505,8 @@
           ? 'Paste GeoJSON here...'
           : 'Paste H3 cell IDs (one per line or comma-separated)...';
       });
+
+      document.getElementById('clear-btn').addEventListener('click', clearAllLayers);
     });
   </script>
 </body>
