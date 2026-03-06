@@ -194,6 +194,15 @@
       let layerIdCounter = 0;
       const layers = [];
 
+      const STORAGE_KEY = 'geo-viewer-layers';
+
+      function saveLayers() {
+        const serializable = layers.map(({ id, name, type, color, visible, data }) => ({
+          id, name, type, color, visible, data
+        }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
+      }
+
       function nextColor() {
         const color = COLORS[colorIndex % COLORS.length];
         colorIndex++;
@@ -213,6 +222,7 @@
         layers.push(layer);
         leafletLayer.addTo(map);
         renderLayerList();
+        saveLayers();
         return layer;
       }
 
@@ -222,6 +232,7 @@
         map.removeLayer(layers[idx].leafletLayer);
         layers.splice(idx, 1);
         renderLayerList();
+        saveLayers();
       }
 
       function toggleLayerVisibility(id) {
@@ -234,6 +245,7 @@
           map.removeLayer(layer.leafletLayer);
         }
         renderLayerList();
+        saveLayers();
       }
 
       function changeLayerColor(id, newColor) {
@@ -249,6 +261,7 @@
             }
           });
         }
+        saveLayers();
       }
 
       function renderLayerList() {
