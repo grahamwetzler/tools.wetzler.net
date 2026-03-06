@@ -211,6 +211,8 @@
                       '#42d4f4', '#f032e6', '#bfef45', '#fabed4', '#469990'];
       let colorIndex = 0;
       let layerIdCounter = 0;
+      let geojsonCount = 0;
+      let h3Count = 0;
       const layers = [];
       let restoring = false;
 
@@ -381,9 +383,6 @@
 
       // Restore persisted layers or initialize empty state
       restoreLayers();
-
-      let geojsonCount = 0;
-      let h3Count = 0;
 
       function escapeHtml(str) {
         return String(str)
