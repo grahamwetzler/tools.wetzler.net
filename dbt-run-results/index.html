@@ -588,10 +588,9 @@
 
       canvas.addEventListener('mousemove', e => {
         if (barRects.length === 0) return;
-        const rect   = canvas.getBoundingClientRect();
-        const scroll = document.getElementById('canvasScroll').scrollTop;
+        const rect = canvas.getBoundingClientRect();
         const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top + scroll;
+        const my = e.clientY - rect.top;
 
         const hit = barRects.find(b => mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h);
 
