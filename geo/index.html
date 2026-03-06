@@ -200,7 +200,46 @@
         const serializable = layers.map(({ id, name, type, color, visible, data }) => ({
           id, name, type, color, visible, data
         }));
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
+        } catch (e) {
+          // storage unavailable or quota exceeded — ignore
+        }
+      }
+
+      function restoreLayers() {
+        let saved;
+        try {
+          saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        } catch (e) {
+          localStorage.removeItem(STORAGE_KEY);
+          return;
+        }
+        if (!Array.isArray(saved) || saved.length === 0) return;
+
+        for (const entry of saved) {
+          try {
+            if (entry.type === 'geojson') {
+              addGeoJSONLayer(JSON.stringify(entry.data));
+            } else if (entry.type === 'h3') {
+              addH3Layer(Array.isArray(entry.data) ? entry.data.join('\n') : entry.data);
+            }
+            // Override auto-generated metadata with saved values
+            const layer = layers[layers.length - 1];
+            layer.id = entry.id;
+            layer.name = entry.name;
+            layer.color = entry.color;
+            if (!entry.visible) {
+              toggleLayerVisibility(layer.id);
+            }
+          } catch (e) {
+            // Skip corrupt layer entries
+          }
+        }
+
+        // Sync counters to avoid ID collisions
+        layerIdCounter = Math.max(layerIdCounter, ...layers.map(l => l.id));
+        renderLayerList();
       }
 
       function nextColor() {
@@ -301,7 +340,7 @@
       }
 
       // Initialize layer list (shows empty state)
-      renderLayerList();
+      restoreLayers();
 
       let geojsonCount = 0;
       let h3Count = 0;
