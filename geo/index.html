@@ -193,10 +193,12 @@
       let colorIndex = 0;
       let layerIdCounter = 0;
       const layers = [];
+      let restoring = false;
 
       const STORAGE_KEY = 'geo-viewer-layers';
 
       function saveLayers() {
+        if (restoring) return;
         const serializable = layers.map(({ id, name, type, color, visible, data }) => ({
           id, name, type, color, visible, data
         }));
@@ -208,6 +210,7 @@
       }
 
       function restoreLayers() {
+        restoring = true;
         let saved;
         try {
           saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -240,6 +243,7 @@
         // Sync counters to avoid ID collisions
         layerIdCounter = Math.max(layerIdCounter, ...layers.map(l => l.id));
         renderLayerList();
+        restoring = false;
       }
 
       function nextColor() {
@@ -339,7 +343,7 @@
         });
       }
 
-      // Initialize layer list (shows empty state)
+      // Restore persisted layers or initialize empty state
       restoreLayers();
 
       let geojsonCount = 0;
