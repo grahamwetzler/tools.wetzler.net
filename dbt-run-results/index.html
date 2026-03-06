@@ -363,7 +363,7 @@
           threadId:      r.thread_id || 'thread-1',
           startedAt,
           completedAt,
-          executionTime: r.execution_time || (completedAt - startedAt) / 1000,
+          executionTime: r.execution_time != null ? r.execution_time : (completedAt - startedAt) / 1000,
           compile,
           execute,
         });
@@ -377,6 +377,11 @@
       const runStart   = Math.min(...nodes.map(n => n.startedAt));
       const runEnd     = Math.max(...nodes.map(n => n.completedAt));
       const totalDurMs = runEnd - runStart;
+
+      if (totalDurMs === 0) {
+        showError('All nodes have identical timestamps — cannot draw timeline.');
+        return;
+      }
 
       const threadIds = [...new Set(nodes.map(n => n.threadId))].sort((a, b) =>
         a.localeCompare(b, undefined, { numeric: true })
@@ -395,7 +400,6 @@
 
       for (const n of nodes) {
         n.isBottleneck = n.executionTime >= p90;
-        n.isCritical   = n.threadId === criticalThread;
       }
 
       const totalSec  = (totalDurMs / 1000).toFixed(1);
@@ -627,8 +631,18 @@
           document.getElementById('ttBottleneck').textContent =
             n.isBottleneck ? '⚡ bottleneck (top 10% by duration)' : '';
 
-          tooltip.style.left = (e.clientX + 14) + 'px';
-          tooltip.style.top  = (e.clientY + 14) + 'px';
+          // Position tooltip, flip if near viewport edge
+          const TIP_OFFSET = 14;
+          const tipW = 280; // max-width from CSS
+          const tipH = 120; // estimated height
+          const tx = (e.clientX + TIP_OFFSET + tipW > window.innerWidth)
+            ? e.clientX - TIP_OFFSET - tipW
+            : e.clientX + TIP_OFFSET;
+          const ty = (e.clientY + TIP_OFFSET + tipH > window.innerHeight)
+            ? e.clientY - TIP_OFFSET - tipH
+            : e.clientY + TIP_OFFSET;
+          tooltip.style.left = tx + 'px';
+          tooltip.style.top  = ty + 'px';
           tooltip.classList.add('visible');
         } else {
           tooltip.classList.remove('visible');
