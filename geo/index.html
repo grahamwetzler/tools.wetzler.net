@@ -266,7 +266,7 @@
               const layer = layers[layers.length - 1];
               layer.id = entry.id;
               layer.name = entry.name;
-              layer.color = entry.color;
+              changeLayerColor(layer.id, entry.color);
               if (!entry.visible) {
                 toggleLayerVisibility(layer.id);
               }
