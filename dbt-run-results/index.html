@@ -416,7 +416,6 @@
 
       renderChart({ nodes, threadIds, runStart, totalDurMs, criticalThread });
       renderLegend();
-      setupTooltip();
     }
 
     function renderChart({ nodes, threadIds, runStart, totalDurMs, criticalThread }) {
@@ -574,16 +573,14 @@
       renderChart(lastRenderArgs);
     });
 
-    function setupTooltip() {
+    // Set up tooltip listeners once at page load — reads barRects global on each event
+    (function initTooltip() {
       const canvas  = document.getElementById('chart');
       const tooltip = document.getElementById('tooltip');
 
-      // Remove old listeners by replacing element
-      const fresh = canvas.cloneNode(true);
-      canvas.parentNode.replaceChild(fresh, canvas);
-
-      fresh.addEventListener('mousemove', e => {
-        const rect  = fresh.getBoundingClientRect();
+      canvas.addEventListener('mousemove', e => {
+        if (barRects.length === 0) return;
+        const rect   = canvas.getBoundingClientRect();
         const scroll = document.getElementById('canvasScroll').scrollTop;
         const mx = e.clientX - rect.left;
         const my = e.clientY - rect.top + scroll;
@@ -633,8 +630,8 @@
 
           // Position tooltip, flip if near viewport edge
           const TIP_OFFSET = 14;
-          const tipW = 280; // max-width from CSS
-          const tipH = 120; // estimated height
+          const tipW = 280;
+          const tipH = 120;
           const tx = (e.clientX + TIP_OFFSET + tipW > window.innerWidth)
             ? e.clientX - TIP_OFFSET - tipW
             : e.clientX + TIP_OFFSET;
@@ -649,10 +646,10 @@
         }
       });
 
-      fresh.addEventListener('mouseleave', () => {
+      canvas.addEventListener('mouseleave', () => {
         tooltip.classList.remove('visible');
       });
-    }
+    })();
 
     function renderLegend() {
       const legend = document.getElementById('legend');
