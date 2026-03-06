@@ -211,39 +211,43 @@
 
       function restoreLayers() {
         restoring = true;
-        let saved;
         try {
-          saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        } catch (e) {
-          localStorage.removeItem(STORAGE_KEY);
-          return;
-        }
-        if (!Array.isArray(saved) || saved.length === 0) return;
-
-        for (const entry of saved) {
+          let saved;
           try {
-            if (entry.type === 'geojson') {
-              addGeoJSONLayer(JSON.stringify(entry.data));
-            } else if (entry.type === 'h3') {
-              addH3Layer(Array.isArray(entry.data) ? entry.data.join('\n') : entry.data);
-            }
-            // Override auto-generated metadata with saved values
-            const layer = layers[layers.length - 1];
-            layer.id = entry.id;
-            layer.name = entry.name;
-            layer.color = entry.color;
-            if (!entry.visible) {
-              toggleLayerVisibility(layer.id);
-            }
+            saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
           } catch (e) {
-            // Skip corrupt layer entries
+            localStorage.removeItem(STORAGE_KEY);
+            return;
           }
-        }
+          if (!Array.isArray(saved) || saved.length === 0) return;
 
-        // Sync counters to avoid ID collisions
-        layerIdCounter = Math.max(layerIdCounter, ...layers.map(l => l.id));
-        renderLayerList();
-        restoring = false;
+          for (const entry of saved) {
+            try {
+              if (entry.type === 'geojson') {
+                addGeoJSONLayer(JSON.stringify(entry.data));
+              } else if (entry.type === 'h3') {
+                addH3Layer(Array.isArray(entry.data) ? entry.data.join('\n') : entry.data);
+              }
+              // Override auto-generated metadata with saved values
+              const layer = layers[layers.length - 1];
+              layer.id = entry.id;
+              layer.name = entry.name;
+              layer.color = entry.color;
+              if (!entry.visible) {
+                toggleLayerVisibility(layer.id);
+              }
+            } catch (e) {
+              // Skip corrupt layer entries
+            }
+          }
+
+          if (layers.length > 0) {
+            layerIdCounter = Math.max(layerIdCounter, ...layers.map(l => l.id));
+          }
+          renderLayerList();
+        } finally {
+          restoring = false;
+        }
       }
 
       function nextColor() {
