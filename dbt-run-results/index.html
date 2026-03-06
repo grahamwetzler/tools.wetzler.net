@@ -387,8 +387,12 @@
         a.localeCompare(b, undefined, { numeric: true })
       );
 
-      const times = nodes.map(n => n.executionTime).sort((a, b) => a - b);
-      const p90   = times[Math.floor(times.length * 0.9)];
+      const times  = nodes.map(n => n.executionTime).sort((a, b) => a - b);
+      const p90    = times[Math.floor(times.length * 0.9)];
+      const median = times[Math.floor(times.length * 0.5)];
+      // Only flag bottlenecks when they're statistically AND practically significant:
+      // top 10%, at least 2× the median, and at least 1s absolute
+      const bottleneckThreshold = Math.max(p90, median * 2, 1.0);
 
       const threadEnds = {};
       for (const n of nodes) {
@@ -399,7 +403,7 @@
       const criticalThread = Object.entries(threadEnds).sort((a, b) => b[1] - a[1])[0][0];
 
       for (const n of nodes) {
-        n.isBottleneck = n.executionTime >= p90;
+        n.isBottleneck = n.executionTime >= bottleneckThreshold;
       }
 
       const totalSec  = (totalDurMs / 1000).toFixed(1);
