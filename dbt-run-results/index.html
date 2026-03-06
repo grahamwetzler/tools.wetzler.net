@@ -462,11 +462,20 @@
         const rowY         = i * (ROW_H + ROW_GAP);
         const isCriticalRow = tid === criticalThread;
 
+        // Critical thread: highlight entire row with a faint accent strip
+        if (isCriticalRow) {
+          ctx.fillStyle = 'rgba(124, 159, 255, 0.08)';
+          ctx.fillRect(0, rowY, W, ROW_H);
+          // Left accent bar
+          ctx.fillStyle = '#7c9fff';
+          ctx.fillRect(0, rowY, 3, ROW_H);
+        }
+
         // Thread label
         ctx.fillStyle = isCriticalRow ? '#7c9fff' : '#666';
         ctx.fillText(
-          (isCriticalRow ? '★ ' : '') + tid.replace('Thread-', 't-'),
-          4,
+          tid.replace('Thread-', 't-'),
+          6,
           rowY + ROW_H / 2 + 4
         );
 
@@ -696,7 +705,7 @@
       // Critical thread indicator
       const critItem = document.createElement('div');
       critItem.className = 'legend-item';
-      critItem.innerHTML = `<span style="color:var(--accent)">★</span><span>critical thread</span>`;
+      critItem.innerHTML = `<div class="legend-swatch" style="background:rgba(124,159,255,0.08);border-left:3px solid #7c9fff"></div><span>critical thread</span>`;
       legend.appendChild(critItem);
     }
   </script>
