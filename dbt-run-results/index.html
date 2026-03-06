@@ -225,7 +225,7 @@
         <div class="canvas-scroll" id="canvasScroll">
           <canvas id="chart"></canvas>
         </div>
-        <canvas id="axis" height="36"></canvas>
+        <canvas id="axis"></canvas>
       </div>
     </div>
 
@@ -423,16 +423,18 @@
 
       const canvas  = document.getElementById('chart');
       const wrapper = document.getElementById('canvasScroll');
+      const dpr     = window.devicePixelRatio || 1;
 
       const W      = wrapper.clientWidth || 800;
       const totalH = threadIds.length * (ROW_H + ROW_GAP);
 
-      canvas.width  = W;
-      canvas.height = totalH;
+      canvas.width  = W * dpr;
+      canvas.height = totalH * dpr;
       canvas.style.width  = W + 'px';
       canvas.style.height = totalH + 'px';
 
       const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, W, totalH);
 
       // Hatch pattern for skipped nodes
@@ -528,13 +530,19 @@
 
     function renderAxis({ W, totalDurMs }) {
       const axisCanvas = document.getElementById('axis');
-      axisCanvas.width = W;
-      axisCanvas.style.width = W + 'px';
+      const dpr        = window.devicePixelRatio || 1;
+      const axisH      = 36;
+
+      axisCanvas.width  = W * dpr;
+      axisCanvas.height = axisH * dpr;
+      axisCanvas.style.width  = W + 'px';
+      axisCanvas.style.height = axisH + 'px';
 
       const ctx = axisCanvas.getContext('2d');
-      ctx.clearRect(0, 0, W, 36);
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, W, axisH);
       ctx.fillStyle = '#0f0f0f';
-      ctx.fillRect(0, 0, W, 36);
+      ctx.fillRect(0, 0, W, axisH);
 
       const chartW   = W - LABEL_W;
       const totalSec = totalDurMs / 1000;
