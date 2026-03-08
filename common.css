@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f0f0f;
+  --surface: #1a1a1a;
+  --border: #2a2a2a;
+  --text: #e0e0e0;
+  --muted: #666;
+  --accent: #7c9fff;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+}
+
+header h1 {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+header h1 a { color: var(--muted); text-decoration: none; }
+header h1 a:hover { color: var(--accent); }
+header h1 span { color: var(--text); }
+
+.subtitle {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  font-weight: 300;
+  color: var(--muted);
+}
+
+.subtitle a {
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.subtitle a:hover {
+  color: var(--accent);
+}
