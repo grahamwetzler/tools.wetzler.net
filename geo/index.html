@@ -24,11 +24,17 @@
     }
 
     .sidebar h1 {
-      font-size: 1.1rem;
+      font-size: 0.9rem;
+      font-weight: 400;
       padding: 16px;
       border-bottom: 1px solid var(--border);
       color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
+
+    .leaflet-container { background: #0f0f0f; }
 
     .add-layer-section {
       padding: 16px;
@@ -179,7 +185,7 @@
 <body>
   <div class="container">
     <div class="sidebar">
-      <h1>Geo Viewer</h1>
+      <h1>// <a href="/" style="color:var(--muted);text-decoration:none;">tools.wetzler.net</a> / <span style="color:var(--text);">geo</span></h1>
       <div class="add-layer-section">
         <label for="layer-type">Layer type</label>
         <select id="layer-type">
@@ -202,8 +208,9 @@
   <script defer>
     document.addEventListener('DOMContentLoaded', () => {
       const map = L.map('map').setView([40, -95], 4);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
         maxZoom: 19
       }).addTo(map);
 
@@ -383,6 +390,8 @@
 
       // Restore persisted layers or initialize empty state
       restoreLayers();
+      map.invalidateSize();
+      if (layers.length === 0) map.setView([40, -95], 4);
 
       function escapeHtml(str) {
         return String(str)
