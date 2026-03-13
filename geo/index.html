@@ -115,17 +115,6 @@
 
     .layer-item:hover { background: var(--border); }
 
-    .layer-item .visibility-btn {
-      background: none;
-      border: none;
-      color: var(--text);
-      cursor: pointer;
-      font-size: 1rem;
-      padding: 2px 4px;
-    }
-
-    .layer-item .visibility-btn.hidden { opacity: 0.3; }
-
     .layer-item .layer-name {
       flex: 1;
       font-size: 0.9rem;
@@ -227,8 +216,8 @@
 
       function saveLayers() {
         if (restoring) return;
-        const serializable = layers.map(({ id, name, type, color, visible, data }) => ({
-          id, name, type, color, visible, data
+        const serializable = layers.map(({ id, name, type, color, opacity, data }) => ({
+          id, name, type, color, opacity, data
         }));
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
@@ -274,9 +263,7 @@
               layer.id = entry.id;
               layer.name = entry.name;
               changeLayerColor(layer.id, entry.color);
-              if (!entry.visible) {
-                toggleLayerVisibility(layer.id);
-              }
+              if (entry.opacity !== undefined) changeLayerOpacity(layer.id, entry.opacity);
             } catch (e) {
               // Skip corrupt layer entries
             }
@@ -298,15 +285,7 @@
       }
 
       function addLayerToState(name, type, color, leafletLayer, data) {
-        const layer = {
-          id: ++layerIdCounter,
-          name,
-          type,
-          color,
-          leafletLayer,
-          visible: true,
-          data
-        };
+        const layer = { id: ++layerIdCounter, name, type, color, opacity: 1, leafletLayer, data };
         layers.push(layer);
         leafletLayer.addTo(map);
         renderLayerList();
@@ -319,19 +298,6 @@
         if (idx === -1) return;
         map.removeLayer(layers[idx].leafletLayer);
         layers.splice(idx, 1);
-        renderLayerList();
-        saveLayers();
-      }
-
-      function toggleLayerVisibility(id) {
-        const layer = layers.find(l => l.id === id);
-        if (!layer) return;
-        layer.visible = !layer.visible;
-        if (layer.visible) {
-          layer.leafletLayer.addTo(map);
-        } else {
-          map.removeLayer(layer.leafletLayer);
-        }
         renderLayerList();
         saveLayers();
       }
@@ -352,6 +318,22 @@
         saveLayers();
       }
 
+      function changeLayerOpacity(id, opacity) {
+        const layer = layers.find(l => l.id === id);
+        if (!layer) return;
+        layer.opacity = opacity;
+        if (typeof layer.leafletLayer.setStyle === 'function') {
+          layer.leafletLayer.setStyle({ opacity, fillOpacity: opacity * 0.5 });
+        } else if (typeof layer.leafletLayer.eachLayer === 'function') {
+          layer.leafletLayer.eachLayer(sub => {
+            if (typeof sub.setStyle === 'function') {
+              sub.setStyle({ opacity, fillOpacity: opacity * 0.5 });
+            }
+          });
+        }
+        saveLayers();
+      }
+
       function renderLayerList() {
         const container = document.getElementById('layers-list');
         container.innerHTML = '';
@@ -365,10 +347,6 @@
           const item = document.createElement('div');
           item.className = 'layer-item';
           item.innerHTML = `
-            <button class="visibility-btn ${layer.visible ? '' : 'hidden'}"
-                    data-id="${layer.id}" title="Toggle visibility">
-              ${layer.visible ? '👁' : '🙈'}
-            </button>
             <span class="layer-name"></span>
             <input type="color" value="${layer.color}" data-id="${layer.id}" title="Change color">
             <button class="delete-btn" data-id="${layer.id}" title="Remove layer">&times;</button>
@@ -377,9 +355,6 @@
           container.appendChild(item);
         }
 
-        container.querySelectorAll('.visibility-btn').forEach(btn => {
-          btn.addEventListener('click', () => toggleLayerVisibility(Number(btn.dataset.id)));
-        });
         container.querySelectorAll('input[type="color"]').forEach(input => {
           input.addEventListener('input', () => changeLayerColor(Number(input.dataset.id), input.value));
         });
