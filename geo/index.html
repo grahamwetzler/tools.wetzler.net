@@ -418,24 +418,65 @@
           return;
         }
 
+        let activePopover = null;
+
         for (const layer of layers) {
           const item = document.createElement('div');
           item.className = 'layer-item';
-          item.innerHTML = `
-            <span class="layer-name"></span>
-            <input type="color" value="${layer.color}" data-id="${layer.id}" title="Change color">
-            <button class="delete-btn" data-id="${layer.id}" title="Remove layer">&times;</button>
-          `;
-          item.querySelector('.layer-name').textContent = layer.name;
+          item.dataset.id = layer.id;
+          item.draggable = true;
+
+          // Drag handle
+          const dragHandle = document.createElement('span');
+          dragHandle.className = 'drag-handle';
+          dragHandle.innerHTML = ICONS.drag;
+          dragHandle.title = 'Drag to reorder';
+
+          // Name span
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'layer-name';
+          nameSpan.textContent = layer.name;
+
+          // Pencil (rename) button
+          const pencilBtn = document.createElement('button');
+          pencilBtn.className = 'icon-btn';
+          pencilBtn.innerHTML = ICONS.pencil;
+          pencilBtn.title = 'Rename layer';
+          pencilBtn.addEventListener('click', () => startRename(layer.id, item, nameSpan));
+
+          // Color swatch button
+          const colorBtn = document.createElement('button');
+          colorBtn.className = 'color-btn';
+          colorBtn.style.background = layer.color;
+          colorBtn.title = 'Color and opacity';
+          colorBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (activePopover) { activePopover.remove(); activePopover = null; return; }
+            const popover = buildColorPopover(layer, colorBtn, () => { activePopover = null; });
+            item.appendChild(popover);
+            activePopover = popover;
+          });
+
+          // Delete button
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'icon-btn delete-btn';
+          deleteBtn.innerHTML = ICONS.close;
+          deleteBtn.title = 'Remove layer';
+          deleteBtn.addEventListener('click', () => removeLayer(layer.id));
+
+          item.append(dragHandle, nameSpan, pencilBtn, colorBtn, deleteBtn);
           container.appendChild(item);
         }
 
-        container.querySelectorAll('input[type="color"]').forEach(input => {
-          input.addEventListener('input', () => changeLayerColor(Number(input.dataset.id), input.value));
+        // Close popover on outside click
+        document.addEventListener('click', function closePopover(e) {
+          if (activePopover && !activePopover.contains(e.target)) {
+            activePopover.remove();
+            activePopover = null;
+          }
         });
-        container.querySelectorAll('.delete-btn').forEach(btn => {
-          btn.addEventListener('click', () => removeLayer(Number(btn.dataset.id)));
-        });
+
+        setupDragAndDrop(container);
       }
 
       // Restore persisted layers or initialize empty state
