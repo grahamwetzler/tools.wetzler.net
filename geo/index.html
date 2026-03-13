@@ -450,6 +450,48 @@
         input.addEventListener('blur', commit);
       }
 
+      function buildColorPopover(layer, triggerBtn, onClose) {
+        const popover = document.createElement('div');
+        popover.className = 'color-popover';
+        popover.addEventListener('click', e => e.stopPropagation());
+
+        const colorLabel = document.createElement('label');
+        colorLabel.textContent = 'Color';
+        const colorInput = document.createElement('input');
+        colorInput.type = 'color';
+        colorInput.value = layer.color;
+        colorInput.addEventListener('input', () => {
+          changeLayerColor(layer.id, colorInput.value);
+          triggerBtn.style.background = colorInput.value;
+        });
+        colorLabel.appendChild(colorInput);
+
+        const opacityLabel = document.createElement('label');
+        const opacityHeader = document.createElement('span');
+        opacityHeader.style.display = 'flex';
+        opacityHeader.style.justifyContent = 'space-between';
+        const opacityText = document.createElement('span');
+        opacityText.textContent = 'Opacity';
+        const opacityVal = document.createElement('span');
+        opacityVal.textContent = Math.round((layer.opacity ?? 1) * 100) + '%';
+        opacityHeader.append(opacityText, opacityVal);
+
+        const opacityInput = document.createElement('input');
+        opacityInput.type = 'range';
+        opacityInput.min = 0;
+        opacityInput.max = 100;
+        opacityInput.value = Math.round((layer.opacity ?? 1) * 100);
+        opacityInput.addEventListener('input', () => {
+          const val = opacityInput.value / 100;
+          opacityVal.textContent = opacityInput.value + '%';
+          changeLayerOpacity(layer.id, val);
+        });
+
+        opacityLabel.append(opacityHeader, opacityInput);
+        popover.append(colorLabel, opacityLabel);
+        return popover;
+      }
+
       function renderLayerList() {
         const container = document.getElementById('layers-list');
         container.innerHTML = '';
