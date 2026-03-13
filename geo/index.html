@@ -409,6 +409,42 @@
         saveLayers();
       }
 
+      function startRename(id, item, nameSpan) {
+        const layer = layers.find(l => l.id === id);
+        if (!layer) return;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'layer-name-input';
+        input.value = layer.name;
+        nameSpan.replaceWith(input);
+        input.focus();
+        input.select();
+
+        function commit() {
+          const newName = input.value.trim() || layer.name;
+          layer.name = newName;
+          saveLayers();
+          const span = document.createElement('span');
+          span.className = 'layer-name';
+          span.textContent = newName;
+          input.replaceWith(span);
+        }
+
+        function cancel() {
+          const span = document.createElement('span');
+          span.className = 'layer-name';
+          span.textContent = layer.name;
+          input.replaceWith(span);
+        }
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); commit(); }
+          if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+        });
+        input.addEventListener('blur', commit);
+      }
+
       function renderLayerList() {
         const container = document.getElementById('layers-list');
         container.innerHTML = '';
