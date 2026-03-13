@@ -323,11 +323,11 @@
         if (!layer) return;
         layer.opacity = opacity;
         if (typeof layer.leafletLayer.setStyle === 'function') {
-          layer.leafletLayer.setStyle({ opacity, fillOpacity: opacity * 0.5 });
+          layer.leafletLayer.setStyle({ opacity, fillOpacity: opacity * 0.3 });
         } else if (typeof layer.leafletLayer.eachLayer === 'function') {
           layer.leafletLayer.eachLayer(sub => {
             if (typeof sub.setStyle === 'function') {
-              sub.setStyle({ opacity, fillOpacity: opacity * 0.5 });
+              sub.setStyle({ opacity, fillOpacity: opacity * 0.3 });
             }
           });
         }
