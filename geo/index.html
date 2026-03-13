@@ -157,7 +157,7 @@
       flex-shrink: 0;
       border-radius: 3px;
     }
-    .layer-item .icon-btn:hover { color: var(--text); }
+    .layer-item .icon-btn:hover { color: var(--text); background: var(--border); }
     .layer-item .delete-btn:hover { color: #e6194b; }
 
     .color-btn {
@@ -450,7 +450,7 @@
         input.addEventListener('blur', commit);
       }
 
-      function buildColorPopover(layer, triggerBtn, onClose) {
+      function buildColorPopover(layer, triggerBtn) {
         const popover = document.createElement('div');
         popover.className = 'color-popover';
         popover.addEventListener('click', e => e.stopPropagation());
@@ -586,7 +586,7 @@
               activePopover.remove();
               activePopover = null;
             }
-            const popover = buildColorPopover(layer, colorBtn, () => { activePopover = null; });
+            const popover = buildColorPopover(layer, colorBtn);
             item.appendChild(popover);
             activePopover = popover;
             document.addEventListener('click', function closePopover(e) {
