@@ -451,10 +451,19 @@
           colorBtn.title = 'Color and opacity';
           colorBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (activePopover) { activePopover.remove(); activePopover = null; return; }
+            if (activePopover) {
+              activePopover.remove();
+              activePopover = null;
+            }
             const popover = buildColorPopover(layer, colorBtn, () => { activePopover = null; });
             item.appendChild(popover);
             activePopover = popover;
+            document.addEventListener('click', function closePopover(e) {
+              if (activePopover && !activePopover.contains(e.target)) {
+                activePopover.remove();
+                activePopover = null;
+              }
+            }, { once: true });
           });
 
           // Delete button
@@ -467,14 +476,6 @@
           item.append(dragHandle, nameSpan, pencilBtn, colorBtn, deleteBtn);
           container.appendChild(item);
         }
-
-        // Close popover on outside click
-        document.addEventListener('click', function closePopover(e) {
-          if (activePopover && !activePopover.contains(e.target)) {
-            activePopover.remove();
-            activePopover = null;
-          }
-        });
 
         setupDragAndDrop(container);
       }
