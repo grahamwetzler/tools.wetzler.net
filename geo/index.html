@@ -573,7 +573,10 @@
           pencilBtn.className = 'icon-btn';
           pencilBtn.innerHTML = ICONS.pencil;
           pencilBtn.title = 'Rename layer';
-          pencilBtn.addEventListener('click', () => startRename(layer.id, item, nameSpan));
+          pencilBtn.addEventListener('click', () => {
+            const currentNameSpan = item.querySelector('.layer-name');
+            if (currentNameSpan) startRename(layer.id, item, currentNameSpan);
+          });
 
           // Color swatch button
           const colorBtn = document.createElement('button');
