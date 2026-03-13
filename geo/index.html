@@ -421,7 +421,11 @@
         input.focus();
         input.select();
 
+        let committed = false;
+
         function commit() {
+          if (committed) return;
+          committed = true;
           const newName = input.value.trim() || layer.name;
           layer.name = newName;
           saveLayers();
@@ -432,6 +436,7 @@
         }
 
         function cancel() {
+          committed = true;
           const span = document.createElement('span');
           span.className = 'layer-name';
           span.textContent = layer.name;
