@@ -678,7 +678,10 @@
       }
 
       function addH3Layer(text) {
-        const ids = text.split(/[\n,]+/).map(s => normalizeH3Id(s.trim())).filter(Boolean);
+        const ids = text.replace(/[\[\]'"]/g, ' ')
+          .split(/[\n,\s]+/)
+          .map(s => normalizeH3Id(s.trim()))
+          .filter(Boolean);
         if (ids.length === 0) {
           throw new Error('No H3 cell IDs found.');
         }
@@ -745,7 +748,7 @@
         const textarea = document.getElementById('layer-data');
         textarea.placeholder = e.target.value === 'geojson'
           ? 'Paste GeoJSON here...'
-          : 'Paste H3 cell IDs (one per line or comma-separated)...';
+          : 'Paste H3 cell IDs — one per line, comma-separated, or a JSON array...';
       });
 
       document.getElementById('clear-btn').addEventListener('click', clearAllLayers);
