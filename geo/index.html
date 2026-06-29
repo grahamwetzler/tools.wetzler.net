@@ -669,8 +669,16 @@
         return added;
       }
 
+      function normalizeH3Id(id) {
+        // Accept decimal representations (all digits) by converting to hex via BigInt
+        if (/^\d+$/.test(id)) {
+          try { return BigInt(id).toString(16); } catch (e) { return id; }
+        }
+        return id;
+      }
+
       function addH3Layer(text) {
-        const ids = text.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+        const ids = text.split(/[\n,]+/).map(s => normalizeH3Id(s.trim())).filter(Boolean);
         if (ids.length === 0) {
           throw new Error('No H3 cell IDs found.');
         }
