@@ -290,7 +290,53 @@
 
       const STORAGE_KEY = 'geo-viewer-layers';
 
+      function loadFromHash() {
+        if (!window.LZString) return false;
+        const hash = location.hash;
+        if (!hash.startsWith('#v=1&s=')) return false;
+        let state;
+        try {
+          state = JSON.parse(LZString.decompressFromEncodedURIComponent(hash.slice(7)));
+        } catch (e) {
+          return false;
+        }
+        if (!state || !Array.isArray(state.layers)) return false;
+
+        let savedLayers;
+        try { savedLayers = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) { savedLayers = null; }
+        const hasExisting = Array.isArray(savedLayers) && savedLayers.length > 0;
+
+        if (hasExisting && !confirm('This link contains a saved map. Replace your current layers?')) {
+          return false;
+        }
+
+        restoring = true;
+        try {
+          for (const entry of state.layers) {
+            try {
+              if (entry.type === 'geojson') addGeoJSONLayer(JSON.stringify(entry.data));
+              else if (entry.type === 'h3') addH3Layer(Array.isArray(entry.data) ? entry.data.join('\n') : entry.data);
+              const layer = layers[layers.length - 1];
+              layer.id = entry.id;
+              layer.name = entry.name;
+              changeLayerColor(layer.id, entry.color);
+              if (entry.opacity !== undefined) changeLayerOpacity(layer.id, entry.opacity);
+            } catch (e) { /* skip corrupt entry */ }
+          }
+          if (layers.length > 0) layerIdCounter = Math.max(layerIdCounter, ...layers.map(l => l.id));
+          if (Array.isArray(state.center) && state.zoom !== undefined) map.setView(state.center, state.zoom);
+          renderLayerList();
+        } finally {
+          restoring = false;
+        }
+
+        const serializable = layers.map(({ id, name, type, color, opacity, data }) => ({ id, name, type, color, opacity, data }));
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable)); } catch (e) {}
+        return true;
+      }
+
       function syncUrl() {
+        if (restoring) return;
         if (!window.LZString) return;
         const center = map.getCenter();
         const state = {
@@ -325,6 +371,7 @@
         h3Count = 0;
         layerIdCounter = 0;
         localStorage.removeItem(STORAGE_KEY);
+        history.replaceState(null, '', location.pathname);
         renderLayerList();
       }
 
@@ -629,7 +676,8 @@
       }
 
       // Restore persisted layers or initialize empty state
-      restoreLayers();
+      const loadedFromUrl = loadFromHash();
+      if (!loadedFromUrl) restoreLayers();
       map.invalidateSize();
       if (layers.length === 0) map.setView([40, -95], 4);
       map.on('moveend', syncUrl);
