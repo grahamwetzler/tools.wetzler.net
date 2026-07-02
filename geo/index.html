@@ -300,13 +300,14 @@
         } catch (e) {
           return false;
         }
-        if (!state || !Array.isArray(state.layers)) return false;
+        if (!state || !Array.isArray(state.layers) || state.layers.length === 0) return false;
 
         let savedLayers;
         try { savedLayers = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) { savedLayers = null; }
         const hasExisting = Array.isArray(savedLayers) && savedLayers.length > 0;
 
-        if (hasExisting && !confirm('This link contains a saved map. Replace your current layers?')) {
+        const isOwnState = location.hash === sessionStorage.getItem('geo-viewer-hash');
+        if (hasExisting && !isOwnState && !confirm('This link contains a saved map. Replace your current layers?')) {
           return false;
         }
 
@@ -324,7 +325,11 @@
             } catch (e) { /* skip corrupt entry */ }
           }
           if (layers.length > 0) layerIdCounter = Math.max(layerIdCounter, ...layers.map(l => l.id));
-          if (Array.isArray(state.center) && state.zoom !== undefined) map.setView(state.center, state.zoom);
+          if (Array.isArray(state.center) && state.center.length === 2 &&
+              isFinite(state.center[0]) && isFinite(state.center[1]) &&
+              typeof state.zoom === 'number' && isFinite(state.zoom)) {
+            try { map.setView(state.center, state.zoom); } catch (e) { /* ignore invalid coords */ }
+          }
           renderLayerList();
         } finally {
           restoring = false;
@@ -346,6 +351,7 @@
         };
         const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(state));
         history.replaceState(null, '', '#v=1&s=' + compressed);
+        sessionStorage.setItem('geo-viewer-hash', location.hash);
       }
 
       function saveLayers() {
