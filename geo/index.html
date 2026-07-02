@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
   <script src="https://unpkg.com/h3-js@4" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js" defer></script>
   <style>
     html, body { height: 100%; }
 
@@ -289,6 +290,18 @@
 
       const STORAGE_KEY = 'geo-viewer-layers';
 
+      function syncUrl() {
+        if (!window.LZString) return;
+        const center = map.getCenter();
+        const state = {
+          center: [center.lat, center.lng],
+          zoom: map.getZoom(),
+          layers: layers.map(({ id, name, type, color, opacity, data }) => ({ id, name, type, color, opacity, data }))
+        };
+        const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(state));
+        history.replaceState(null, '', '#v=1&s=' + compressed);
+      }
+
       function saveLayers() {
         if (restoring) return;
         const serializable = layers.map(({ id, name, type, color, opacity, data }) => ({
@@ -299,6 +312,7 @@
         } catch (e) {
           // storage unavailable or quota exceeded — ignore
         }
+        syncUrl();
       }
 
       function clearAllLayers() {
@@ -618,6 +632,7 @@
       restoreLayers();
       map.invalidateSize();
       if (layers.length === 0) map.setView([40, -95], 4);
+      map.on('moveend', syncUrl);
 
       function escapeHtml(str) {
         return String(str)
