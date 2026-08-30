@@ -58,8 +58,10 @@
   #controls {
     position: absolute; left: 0; right: 0; bottom: max(env(safe-area-inset-bottom), 14px);
     display: flex; justify-content: center; gap: 24px; align-items: center;
+    pointer-events: none; /* full-width row must not eat taps beside the buttons */
   }
   .ctl {
+    pointer-events: auto;
     width: 104px; height: 48px; border-radius: 24px;
     border: 2px solid rgba(255,255,255,.35);
     background: rgba(0,0,0,.55); color: #fff;
