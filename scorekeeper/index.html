@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Scorekeeper</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Score">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+  @font-face {
+    font-family: "Madimi One";
+    font-weight: 400;
+    font-display: swap;
+    src: url("madimione.woff2") format("woff2");
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%; overflow: hidden;
+    background: #000;
+    font-family: "Madimi One", ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", system-ui, sans-serif;
+    font-weight: 400;
+    -webkit-user-select: none; user-select: none;
+    touch-action: manipulation;
+    overscroll-behavior: none;
+  }
+  #board {
+    display: flex; flex-direction: row;
+    height: 100%; width: 100%;
+  }
+  .team {
+    flex: 1; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    border: 0; padding: 0; margin: 0;
+    color: #fff; font: inherit; cursor: pointer;
+    -webkit-user-select: none; user-select: none;
+    transition: filter .08s ease;
+  }
+  .team:active { filter: brightness(1.25); }
+  #teamA { background: #8b0000; }
+  #teamB { background: #00008b; }
+  .label {
+    position: absolute; top: max(env(safe-area-inset-top), 8px); left: 0; right: 0;
+    text-align: center; font-size: clamp(12px, 3vmin, 22px);
+    letter-spacing: .35em; text-indent: .35em;
+    opacity: .85; pointer-events: none; z-index: 1;
+  }
+  #teamA .label { color: #ff6b6b; }
+  #teamB .label { color: #6b9bff; }
+  .score {
+    line-height: .8; white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  #controls {
+    position: absolute; left: 50%; bottom: max(env(safe-area-inset-bottom), 14px);
+    transform: translateX(-50%);
+    display: flex; gap: 18px; align-items: center;
+  }
+  .ctl {
+    min-width: 96px; height: 48px; padding: 0 18px; border-radius: 24px;
+    border: 2px solid rgba(255,255,255,.35);
+    background: rgba(0,0,0,.55); color: #fff;
+    font-size: 16px; letter-spacing: .12em;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; backdrop-filter: blur(4px);
+  }
+  .ctl:active { background: rgba(255,255,255,.2); }
+  .ctl:disabled { opacity: .3; cursor: default; }
+  #reset.armed { background: #b00020; border-color: #ff6b6b; }
+  @media (orientation: portrait) {
+    #board { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+  <div id="board">
+    <button id="teamA" class="team" aria-label="Team A, add point">
+      <span class="label">TEAM A</span>
+      <span class="score" id="scoreA">0</span>
+    </button>
+    <button id="teamB" class="team" aria-label="Team B, add point">
+      <span class="label">TEAM B</span>
+      <span class="score" id="scoreB">0</span>
+    </button>
+  </div>
+
+  <div id="controls">
+    <button id="undo" class="ctl" aria-label="Undo last change" disabled>UNDO</button>
+    <button id="reset" class="ctl" aria-label="Reset scores">RESET</button>
+  </div>
+
+  <!-- ponytail: iOS web has no haptics API; this hidden switch + label.click() fires a
+       native tap on iOS 17.4+. Undocumented, may break on an iOS update. No upgrade path
+       exists until Safari ships the Vibration API or a real haptics API. -->
+  <label id="hapticLabel" for="hapticSwitch" hidden></label>
+  <input id="hapticSwitch" type="checkbox" switch hidden>
+
+<script>
+const KEY = "scorekeeper.v1";
+const el = {
+  a: document.getElementById("scoreA"),
+  b: document.getElementById("scoreB"),
+  undo: document.getElementById("undo"),
+  reset: document.getElementById("reset"),
+  hapticLabel: document.getElementById("hapticLabel"),
+};
+
+let state = load();
+
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if (s && Number.isFinite(s.a) && Number.isFinite(s.b) && Array.isArray(s.history)) return s;
+  } catch (e) {}
+  return { a: 0, b: 0, history: [] };
+}
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+}
+
+function render() {
+  el.a.textContent = state.a;
+  el.b.textContent = state.b;
+  el.undo.disabled = state.history.length === 0;
+  fitScores();
+}
+
+// Landscape (primary use): lock the score to the biggest size that fits a
+// 2-digit number, so the digits never jump as the game runs 0->99. Only a
+// 3-digit score shrinks to fit. Portrait: just fit whatever's there.
+// Pure CSS can't size text to a variable-width box like this.
+function fitScores() {
+  const landscape = window.innerWidth > window.innerHeight;
+  for (const s of [el.a, el.b]) {
+    const box = s.parentElement;
+    if (!box.clientWidth) return;
+    const real = s.textContent;
+    s.textContent = landscape && real.length <= 2 ? "88" : real;
+    s.style.fontSize = "100px";
+    // width margin clears the iPhone landscape notch; height can run close
+    const scale = Math.min(box.clientWidth * 0.85 / s.scrollWidth, box.clientHeight * 0.96 / s.scrollHeight);
+    s.textContent = real;
+    s.style.fontSize = (100 * scale) + "px";
+  }
+}
+window.addEventListener("resize", fitScores);
+
+function haptic() {
+  // Android / anything with the Vibration API
+  if (navigator.vibrate) navigator.vibrate(12);
+  // iOS 17.4+ fallback — see ponytail note above
+  try { el.hapticLabel.click(); } catch (e) {}
+}
+
+function pushHistory() {
+  state.history.push([state.a, state.b]);
+  if (state.history.length > 200) state.history.shift();
+}
+
+function addPoint(team) {
+  pushHistory();
+  state[team]++;
+  commit();
+  haptic();
+}
+
+function undo() {
+  const prev = state.history.pop();
+  if (!prev) return;
+  [state.a, state.b] = prev;
+  commit();
+}
+
+// Two-tap confirm instead of confirm() — that dialog is silently blocked in
+// some standalone-PWA / in-app-browser contexts. Tap RESET once to arm, again
+// within 3s to reset. Any score/undo action disarms it.
+let resetTimer = null;
+function armReset() {
+  if (state.a === 0 && state.b === 0) return;
+  if (el.reset.classList.contains("armed")) { disarmReset(); doReset(); return; }
+  el.reset.classList.add("armed");
+  el.reset.textContent = "SURE?";
+  resetTimer = setTimeout(disarmReset, 3000);
+}
+function disarmReset() {
+  clearTimeout(resetTimer);
+  el.reset.classList.remove("armed");
+  el.reset.textContent = "RESET";
+}
+function doReset() {
+  pushHistory();
+  state.a = 0;
+  state.b = 0;
+  commit();
+}
+
+function commit() {
+  disarmReset();
+  render();
+  save();
+}
+
+document.getElementById("teamA").addEventListener("click", () => addPoint("a"));
+document.getElementById("teamB").addEventListener("click", () => addPoint("b"));
+el.undo.addEventListener("click", undo);
+el.reset.addEventListener("click", armReset);
+
+render();
+if (document.fonts) document.fonts.ready.then(fitScores);
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
+// ---- self-check: run with ?test in the URL ----
+if (location.search.includes("test")) {
+  const savedLS = localStorage.getItem(KEY);
+  state = { a: 0, b: 0, history: [] };
+  addPoint("a"); addPoint("b"); addPoint("b");      // 1-2
+  console.assert(state.a === 1 && state.b === 2, "after adds");
+  undo();                                            // 1-1
+  console.assert(state.a === 1 && state.b === 1, "after undo");
+  armReset();                                        // arm only, no change
+  console.assert(state.a === 1 && state.b === 1, "arm does not reset");
+  armReset();                                        // 0-0
+  console.assert(state.a === 0 && state.b === 0, "second tap resets");
+  undo();                                            // back to 1-1
+  console.assert(state.a === 1 && state.b === 1, "undo restores reset");
+  fitScores();
+  console.assert(/^\d+(\.\d+)?px$/.test(el.a.style.fontSize), "fitScores set a px size");
+  if (savedLS === null) localStorage.removeItem(KEY); else localStorage.setItem(KEY, savedLS);
+  state = load();
+  render();
+  console.log("self-check passed");
+}
+</script>
+</body>
+</html>
